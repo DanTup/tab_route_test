@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -57,6 +59,11 @@ class _MyTabbedPageState extends State<MyTabbedPage>
     super.dispose();
   }
 
+  updateAddressBar(String tabName) {
+    window.history.pushState(null, 'title', '#/$tabName');
+    document.title = tabName;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,8 +73,18 @@ class _MyTabbedPageState extends State<MyTabbedPage>
           tabs: myTabs,
           onTap: (newIndex) {
             if (_tabController.indexIsChanging) {
-              Navigator.pushNamed(
-                  context, '/' + myTabs[newIndex].text.toLowerCase());
+              final tabName = myTabs[newIndex].text.toLowerCase();
+              final previousTabIndex = _tabController.previousIndex;
+              final previousTabName =
+                  myTabs[previousTabIndex].text.toLowerCase();
+              updateAddressBar(tabName);
+              // Back button doesn't work correctly, with or without this.
+              // ModalRoute.of(context).addLocalHistoryEntry(LocalHistoryEntry(
+              //   onRemove: () {
+              //     _tabController.animateTo(previousTabIndex);
+              //     // updateAddressBar(previousTabName);
+              //   },
+              // ));
             }
           },
         ),
