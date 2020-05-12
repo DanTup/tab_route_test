@@ -1,23 +1,28 @@
+import 'dart:collection';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  const MyApp({Key key}) : super(key: key);
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      onGenerateRoute: (settings) {
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (context) => MyTabbedPage(initialTab: settings.name),
-        );
-      },
+      routePackageParser: MyRoutePackageParser(),
+      routerDelegate: MyRouterDelegate(this),
     );
   }
 }
@@ -85,5 +90,53 @@ class _MyTabbedPageState extends State<MyTabbedPage>
         }).toList(),
       ),
     );
+  }
+}
+
+final navKey = GlobalKey();
+
+class MyConfiguration {
+  String currentRoute;
+  MyConfiguration(this.currentRoute);
+}
+
+class MyRouterDelegate extends RouterDelegate<MyConfiguration>
+    with PopNavigatorRouterDelegateMixin<MyConfiguration> {
+  MyRouterDelegate(this.state);
+  _MyAppState state;
+  final routes = ListQueue<String>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      pages: [
+        MaterialPage(
+          builder: (context) => MyTabbedPage(
+            initialTab: routes.isNotEmpty ? routes.last : null,
+          ),
+        )
+      ],
+      onPopPage: (route, result) {
+        routes.removeLast();
+        rebuild??
+        return true;
+      },
+    );
+  }
+
+  @override
+  GlobalKey<NavigatorState> get navigatorKey => navKey;
+
+  @override
+  Future<void> setNewRoutePath(MyConfiguration configuration) {
+    routes.add(configuration.currentRoute);
+    return SynchronousFuture<void>(null);
+  }
+}
+
+class MyRoutePackageParser extends RoutePackageParser {
+  @override
+  Future<MyConfiguration> parse(RoutePackage routePackage) async {
+    return MyConfiguration(routePackage.routeName);
   }
 }
