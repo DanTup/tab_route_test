@@ -21,8 +21,8 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      routePackageParser: MyRoutePackageParser(),
-      routerDelegate: MyRouterDelegate(this),
+      routeNameParser: MyRouteNameParser(),
+      routerDelegate: MyRouterDelegate(),
     );
   }
 }
@@ -47,13 +47,26 @@ class _MyTabbedPageState extends State<MyTabbedPage>
   void initState() {
     super.initState();
     _tabController = TabController(vsync: this, length: myTabs.length);
+    _updateTab();
+  }
+
+  void _updateTab() {
     if (widget.initialTab != null) {
       final initialIndex = myTabs.indexWhere(
           (tab) => '/' + tab.text.toLowerCase() == widget.initialTab);
       if (initialIndex != -1) {
         _tabController.index = initialIndex;
+      } else {
+        // '/' will be default to LEFT.
+        _tabController.index = 0;
       }
     }
+  }
+
+  @override
+  void didUpdateWidget(Widget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updateTab();
   }
 
   @override
@@ -71,8 +84,16 @@ class _MyTabbedPageState extends State<MyTabbedPage>
           tabs: myTabs,
           onTap: (newIndex) {
             if (_tabController.indexIsChanging) {
-              Navigator.pushNamed(
-                  context, '/' + myTabs[newIndex].text.toLowerCase());
+              // There are two ways
+              // Changing the url directly
+
+              // final PlatformRouteNameProvider provider = Router.of(context).routeNameProvider as PlatformRouteNameProvider;
+              // provider.value = '/' + myTabs[newIndex].text.toLowerCase();
+
+              // Or update the routes in router delegate directly
+              final MyRouterDelegate delegate =
+                  Router.of(context).routerDelegate as MyRouterDelegate;
+              delegate.pushNewRoute('/' + myTabs[newIndex].text.toLowerCase());
             }
           },
         ),
@@ -93,50 +114,58 @@ class _MyTabbedPageState extends State<MyTabbedPage>
   }
 }
 
-final navKey = GlobalKey();
-
 class MyConfiguration {
   String currentRoute;
   MyConfiguration(this.currentRoute);
 }
 
-class MyRouterDelegate extends RouterDelegate<MyConfiguration>
-    with PopNavigatorRouterDelegateMixin<MyConfiguration> {
-  MyRouterDelegate(this.state);
-  _MyAppState state;
+class MyRouterDelegate extends RouterDelegate<MyConfiguration> {
+  MyRouterDelegate();
   final routes = ListQueue<String>();
+
+  void pushNewRoute(String routeName) {
+    routes.add(routeName);
+    // Needs to notify the router that the state has changed.
+    notifyListeners();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Navigator(
-      pages: [
-        MaterialPage(
-          builder: (context) => MyTabbedPage(
-            initialTab: routes.isNotEmpty ? routes.last : null,
-          ),
-        )
-      ],
-      onPopPage: (route, result) {
-        routes.removeLast();
-        rebuild??
-        return true;
-      },
+    if (routes.isEmpty) return Container();
+    return MyTabbedPage(
+      initialTab: routes.last,
     );
   }
 
   @override
-  GlobalKey<NavigatorState> get navigatorKey => navKey;
+  Future<bool> popRoute() {
+    if (routes.length <= 1) return SynchronousFuture<bool>(false);
+    routes.removeLast();
+    notifyListeners();
+    return SynchronousFuture<bool>(true);
+  }
 
   @override
   Future<void> setNewRoutePath(MyConfiguration configuration) {
     routes.add(configuration.currentRoute);
     return SynchronousFuture<void>(null);
   }
+
+  @override
+  MyConfiguration get currentConfiguration {
+    if (routes.isEmpty) return null;
+    return MyConfiguration(routes.last);
+  }
 }
 
-class MyRoutePackageParser extends RoutePackageParser {
+class MyRouteNameParser extends RouteNameParser<MyConfiguration> {
   @override
-  Future<MyConfiguration> parse(RoutePackage routePackage) async {
-    return MyConfiguration(routePackage.routeName);
+  Future<MyConfiguration> parse(String routeName) async {
+    return SynchronousFuture<MyConfiguration>(MyConfiguration(routeName));
+  }
+
+  @override
+  String restore(MyConfiguration configuration) {
+    return configuration.currentRoute;
   }
 }
