@@ -124,6 +124,7 @@ class MyRouterDelegate extends RouterDelegate<MyConfiguration> {
   final routes = ListQueue<String>();
 
   void pushNewRoute(String routeName) {
+    print('pushing new route $routeName');
     routes.add(routeName);
     // Needs to notify the router that the state has changed.
     notifyListeners();
@@ -131,7 +132,11 @@ class MyRouterDelegate extends RouterDelegate<MyConfiguration> {
 
   @override
   Widget build(BuildContext context) {
-    if (routes.isEmpty) return Container();
+    if (routes.isEmpty) {
+      print('build: empty');
+      return Container();
+    }
+    print('building: ${routes.last}');
     return MyTabbedPage(
       initialTab: routes.last,
     );
@@ -139,7 +144,11 @@ class MyRouterDelegate extends RouterDelegate<MyConfiguration> {
 
   @override
   Future<bool> popRoute() {
-    if (routes.length <= 1) return SynchronousFuture<bool>(false);
+    if (routes.length <= 1) {
+      print('skipping popRoute');
+      return SynchronousFuture<bool>(false);
+    }
+    print('removing last route');
     routes.removeLast();
     notifyListeners();
     return SynchronousFuture<bool>(true);
@@ -147,13 +156,18 @@ class MyRouterDelegate extends RouterDelegate<MyConfiguration> {
 
   @override
   Future<void> setNewRoutePath(MyConfiguration configuration) {
+    print('setting new route path "${configuration?.currentRoute}"');
     routes.add(configuration.currentRoute);
     return SynchronousFuture<void>(null);
   }
 
   @override
   MyConfiguration get currentConfiguration {
-    if (routes.isEmpty) return null;
+    if (routes.isEmpty) {
+      print('returning null as curreng config');
+      return null;
+    }
+    print('returning "${routes.last}" as curreng config');
     return MyConfiguration(routes.last);
   }
 }
@@ -161,11 +175,13 @@ class MyRouterDelegate extends RouterDelegate<MyConfiguration> {
 class MyRouteNameParser extends RouteNameParser<MyConfiguration> {
   @override
   Future<MyConfiguration> parse(String routeName) async {
+    print('parsing route: $routeName');
     return SynchronousFuture<MyConfiguration>(MyConfiguration(routeName));
   }
 
   @override
   String restore(MyConfiguration configuration) {
+    print('restoring route: ${configuration?.currentRoute}');
     return configuration.currentRoute;
   }
 }
