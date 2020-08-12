@@ -21,7 +21,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      routeNameParser: MyRouteNameParser(),
+      routeInformationParser: MyRouteInformationParser(),
       routerDelegate: MyRouterDelegate(),
     );
   }
@@ -119,7 +119,8 @@ class MyConfiguration {
   MyConfiguration(this.currentRoute);
 }
 
-class MyRouterDelegate extends RouterDelegate<MyConfiguration> {
+class MyRouterDelegate extends RouterDelegate<MyConfiguration>
+    with ChangeNotifier {
   MyRouterDelegate();
   final routes = ListQueue<String>();
 
@@ -164,24 +165,26 @@ class MyRouterDelegate extends RouterDelegate<MyConfiguration> {
   @override
   MyConfiguration get currentConfiguration {
     if (routes.isEmpty) {
-      print('returning null as curreng config');
+      print('returning null as current config');
       return null;
     }
-    print('returning "${routes.last}" as curreng config');
+    print('returning "${routes.last}" as current config');
     return MyConfiguration(routes.last);
   }
 }
 
-class MyRouteNameParser extends RouteNameParser<MyConfiguration> {
+class MyRouteInformationParser extends RouteInformationParser<MyConfiguration> {
   @override
-  Future<MyConfiguration> parse(String routeName) async {
-    print('parsing route: $routeName');
-    return SynchronousFuture<MyConfiguration>(MyConfiguration(routeName));
+  Future<MyConfiguration> parseRouteInformation(
+      RouteInformation routeInformation) {
+    print('parsing route: ${routeInformation.location}');
+    return SynchronousFuture<MyConfiguration>(
+        MyConfiguration(routeInformation.location));
   }
 
   @override
-  String restore(MyConfiguration configuration) {
+  RouteInformation restoreRouteInformation(MyConfiguration configuration) {
     print('restoring route: ${configuration?.currentRoute}');
-    return configuration.currentRoute;
+    return RouteInformation(location: configuration.currentRoute);
   }
 }
