@@ -42,12 +42,15 @@ class DevToolsRouteInformationParser
 }
 
 class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
-    with ChangeNotifier {
-  final Route Function(String, Map<String, String>) generateRoute;
-
+    with
+        ChangeNotifier,
+        PopNavigatorRouterDelegateMixin<DevToolsRouteConfiguration> {
+  final GlobalKey<NavigatorState> navigatorKey;
+  final Page Function(BuildContext, String, Map<String, String>) getPage;
   final routes = ListQueue<DevToolsRouteConfiguration>();
 
-  DevToolsRouterDelegate(this.generateRoute);
+  DevToolsRouterDelegate(this.getPage)
+      : navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   DevToolsRouteConfiguration get currentConfiguration {
@@ -68,25 +71,27 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
     print('RouterDelegate is building! $screen / $args');
 
     return Navigator(
-      onGenerateRoute: (_) => generateRoute(screen, args),
+      key: navigatorKey,
+      pages: [getPage(context, screen, args)],
+      onPopPage: (_, __) => _popPage(),
     );
   }
 
-  @override
-  Future<bool> popRoute() {
+  bool _popPage() {
     if (routes.length <= 1) {
       print('skipping popRoute');
-      return SynchronousFuture<bool>(false);
+      return false;
     }
     print('removing last route');
     routes.removeLast();
     notifyListeners();
-    return SynchronousFuture<bool>(true);
+    return true;
   }
 
-  void pushScreen(String screen) {
+  void pushScreen(String screen, [Map<String, String> args]) {
     print('pushing new screen $screen');
-    routes.add(DevToolsRouteConfiguration(screen, currentConfiguration.args));
+    routes.add(DevToolsRouteConfiguration(
+        screen, {...currentConfiguration.args, ...?args}));
     // Needs to notify the router that the state has changed.
     notifyListeners();
   }

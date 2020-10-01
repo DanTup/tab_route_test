@@ -41,6 +41,7 @@ class DevToolsAppState extends State<DevToolsApp> {
         if (params['uri']?.isNotEmpty ?? false) {
           print('returning main view!');
           return DevToolsScaffold(
+            key: Key('home'),
             tab: page,
             tabs: [
               TabPage('tab1', Text('Tab 1 (connected to ${params['uri']})')),
@@ -53,6 +54,7 @@ class DevToolsAppState extends State<DevToolsApp> {
         } else {
           print('returning connect screen!');
           return DevToolsScaffold.withChild(
+            key: Key('connect'),
             child: Column(
               children: [
                 Text('Connect!'),
@@ -61,7 +63,9 @@ class DevToolsAppState extends State<DevToolsApp> {
                   onPressed: () {
                     final routerDelegate = Router.of(context).routerDelegate
                         as DevToolsRouterDelegate;
-                    routerDelegate.updateArgs({'uri': 'my vm service uri'});
+                    print('connect button pressed!');
+                    routerDelegate
+                        .pushScreen('tab1', {'uri': 'my vm service uri'});
                   },
                 ),
               ],
@@ -71,6 +75,7 @@ class DevToolsAppState extends State<DevToolsApp> {
       },
       otherRoute: (_, __, ___) {
         return DevToolsScaffold.withChild(
+          key: Key('other'),
           child: Text('Other screen!'),
         );
       },
@@ -80,22 +85,18 @@ class DevToolsAppState extends State<DevToolsApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      routerDelegate: DevToolsRouterDelegate(_generateRoute),
+      routerDelegate: DevToolsRouterDelegate(_getPage),
       routeInformationParser: DevToolsRouteInformationParser(),
     );
   }
 
-  Route _generateRoute(String page, Map<String, String> args) {
+  Page _getPage(BuildContext context, String page, Map<String, String> args) {
     print('Generating route for $page / $args');
 
     final route = routes.containsKey('/$page') ? '/$page' : homeRoute;
 
-    return MaterialPageRoute(
-      builder: (context) => routes[route](
-        context,
-        page,
-        args,
-      ),
+    return MaterialPage(
+      child: routes[route](context, page, args),
     );
   }
 }

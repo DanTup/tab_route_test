@@ -42,20 +42,25 @@ class DevToolsScaffoldState extends State<DevToolsScaffold>
     super.dispose();
   }
 
-  // @override
-  // void didUpdateWidget(DevToolsScaffold oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
+  @override
+  void didUpdateWidget(DevToolsScaffold oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    print('widget update!');
 
-  //   if (widget.tab != null &&
-  //       widget.tabs[_tabController.index].name != widget.tab) {
-  //     // If the page changed (eg. the route was modified by pressing back in the
-  //     // browser), animate to the new one.
-  //     final newIndex = widget.tabs.indexWhere((t) => t.name == widget.tab);
-  //     if (newIndex > -1) {
-  //       _tabController.animateTo(newIndex);
-  //     }
-  //   }
-  // }
+    if (widget.tab != null &&
+        widget.tabs[_tabController.index].name != widget.tab) {
+      print(
+          'tab has changed from ${widget.tabs[_tabController.index].name} to ${widget.tab}!');
+      // If the page changed (eg. the route was modified by pressing back in the
+      // browser), animate to the new one.
+      final newIndex = widget.tabs.indexWhere((t) => t.name == widget.tab);
+      if (newIndex > -1) {
+        _tabController.animateTo(newIndex);
+      }
+    } else {
+      print('tab did not change!');
+    }
+  }
 
   void _setupTabController() {
     _tabController?.dispose();
@@ -75,7 +80,11 @@ class DevToolsScaffoldState extends State<DevToolsScaffold>
 
       final routerDelegate =
           Router.of(context).routerDelegate as DevToolsRouterDelegate;
-      routerDelegate.pushScreen(screen.name);
+      print('tab controller change!');
+      if (_tabController.indexIsChanging) {
+        print('index changed!');
+        routerDelegate.pushScreen(screen.name);
+      }
     });
   }
 
