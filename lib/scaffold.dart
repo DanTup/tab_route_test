@@ -81,10 +81,7 @@ class DevToolsScaffoldState extends State<DevToolsScaffold>
       final routerDelegate =
           Router.of(context).routerDelegate as DevToolsRouterDelegate;
       print('tab controller change!');
-      if (_tabController.indexIsChanging) {
-        print('index changed!');
-        routerDelegate.pushScreen(screen.name);
-      }
+      routerDelegate.pushScreenIfNotCurrent(screen.name);
     });
   }
 

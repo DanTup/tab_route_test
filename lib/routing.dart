@@ -88,10 +88,18 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
     return true;
   }
 
-  void pushScreen(String screen, [Map<String, String> args]) {
-    print('pushing new screen $screen');
+  void pushScreenIfNotCurrent(String screen, [Map<String, String> updateArgs]) {
+    final screenChanged = screen != currentConfiguration.screen;
+    final argsChanged = !mapEquals(
+      {...currentConfiguration.args, ...?updateArgs},
+      currentConfiguration.args,
+    );
+    if (!screenChanged && !argsChanged) {
+      return;
+    }
+
     routes.add(DevToolsRouteConfiguration(
-        screen, {...currentConfiguration.args, ...?args}));
+        screen, {...currentConfiguration.args, ...?updateArgs}));
     // Needs to notify the router that the state has changed.
     notifyListeners();
   }
@@ -104,11 +112,19 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
     return SynchronousFuture<void>(null);
   }
 
-  void updateArgs(Map<String, String> replacementArgs) {
-    print('pushing screen with replaced args $replacementArgs');
+  void updateArgsIfNotCurrent(Map<String, String> updateArgs) {
+    final argsChanged = !mapEquals(
+      {...currentConfiguration.args, ...?updateArgs},
+      currentConfiguration.args,
+    );
+    if (!argsChanged) {
+      return;
+    }
+
+    print('pushing screen with replaced args $updateArgs');
     routes.add(DevToolsRouteConfiguration(
       currentConfiguration.screen,
-      {...currentConfiguration.args, ...replacementArgs},
+      {...currentConfiguration.args, ...updateArgs},
     ));
     // Needs to notify the router that the state has changed.
     notifyListeners();

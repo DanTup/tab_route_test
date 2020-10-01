@@ -64,8 +64,8 @@ class DevToolsAppState extends State<DevToolsApp> {
                     final routerDelegate = Router.of(context).routerDelegate
                         as DevToolsRouterDelegate;
                     print('connect button pressed!');
-                    routerDelegate
-                        .pushScreen('tab1', {'uri': 'my vm service uri'});
+                    routerDelegate.pushScreenIfNotCurrent(
+                        'tab1', {'uri': 'my vm service uri'});
                   },
                 ),
               ],
