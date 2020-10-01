@@ -44,11 +44,11 @@ class DevToolsAppState extends State<DevToolsApp> {
             key: Key('home'),
             tab: page,
             tabs: [
-              TabPage('tab1', Text('Tab 1 (connected to ${params['uri']})')),
-              TabPage('tab2', Text('Tab 2 (connected to ${params['uri']})')),
-              TabPage('tab3', Text('Tab 3 (connected to ${params['uri']})')),
-              TabPage('tab4', Text('Tab 4 (connected to ${params['uri']})')),
-              TabPage('tab5', Text('Tab 5 (connected to ${params['uri']})')),
+              TabPage('tab1', TabBody('Tab 1 (connected to ${params['uri']})')),
+              TabPage('tab2', TabBody('Tab 2 (connected to ${params['uri']})')),
+              TabPage('tab3', TabBody('Tab 3 (connected to ${params['uri']})')),
+              TabPage('tab4', TabBody('Tab 4 (connected to ${params['uri']})')),
+              TabPage('tab5', TabBody('Tab 5 (connected to ${params['uri']})')),
             ],
           );
         } else {
@@ -106,4 +106,36 @@ class TabPage {
   final Widget content;
 
   TabPage(this.name, this.content);
+}
+
+@immutable
+class TabBody extends StatelessWidget {
+  final String text;
+
+  TabBody(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    final routerDelegate =
+        Router.of(context).routerDelegate as DevToolsRouterDelegate;
+    final isLightTheme =
+        routerDelegate.currentConfiguration.args['theme'] != 'dark';
+    return Container(
+      decoration:
+          BoxDecoration(color: isLightTheme ? Colors.white : Colors.grey),
+      child: Column(
+        children: [
+          Text(text),
+          Text(isLightTheme ? 'light' : 'dark'),
+          RaisedButton(
+            child: Text('Toggle theme!'),
+            onPressed: () {
+              routerDelegate.updateArgsIfNotCurrent(
+                  {'theme': isLightTheme ? 'dark' : 'light'});
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
