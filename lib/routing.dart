@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class DevToolsRouteConfiguration {
@@ -52,13 +53,14 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
   DevToolsRouterDelegate(this.getPage)
       : navigatorKey = GlobalKey<NavigatorState>();
 
+  static DevToolsRouterDelegate of(BuildContext context) =>
+      Router.of(context).routerDelegate as DevToolsRouterDelegate;
+
   @override
   DevToolsRouteConfiguration get currentConfiguration {
     if (routes.isEmpty) {
-      print('returning null as current config');
       return null;
     }
-    print('returning "${routes.last}" as current config');
     return routes.last;
   }
 
@@ -68,21 +70,26 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
     final screen = routeConfig.screen;
     final args = routeConfig.args ?? {};
 
-    print('RouterDelegate is building! $screen / $args');
+    print('RouterDelegate is building $screen');
 
     return Navigator(
       key: navigatorKey,
-      pages: [getPage(context, screen, args)],
-      onPopPage: (_, __) => _popPage(),
+      pages: [
+        // Dummy page to ensure there's always > 1
+        MaterialPage(child: Text('test root page...')),
+        getPage(context, screen, args),
+      ],
+      // why isn't this called?
+      onPopPage: (_, __) => popPage(),
     );
   }
 
-  bool _popPage() {
+  bool popPage() {
     if (routes.length <= 1) {
       print('skipping popRoute');
       return false;
     }
-    print('removing last route');
+    print('popping ${routes.last.screen}');
     routes.removeLast();
     notifyListeners();
     return true;
@@ -98,6 +105,7 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
       return;
     }
 
+    print('pushing $screen');
     routes.add(DevToolsRouteConfiguration(
         screen, {...currentConfiguration.args, ...?updateArgs}));
     // Needs to notify the router that the state has changed.
@@ -106,8 +114,7 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
 
   @override
   Future<void> setNewRoutePath(DevToolsRouteConfiguration configuration) {
-    print(
-        'setting new route path "${configuration?.screen}" / ${configuration?.args}');
+    print('setting new route path ${configuration?.screen}');
     routes.add(configuration);
     return SynchronousFuture<void>(null);
   }
@@ -121,7 +128,7 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
       return;
     }
 
-    print('pushing screen with replaced args $updateArgs');
+    print('updating args on ${currentConfiguration.screen}');
     routes.add(DevToolsRouteConfiguration(
       currentConfiguration.screen,
       {...currentConfiguration.args, ...updateArgs},

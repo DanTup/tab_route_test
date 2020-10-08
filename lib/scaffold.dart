@@ -45,12 +45,12 @@ class DevToolsScaffoldState extends State<DevToolsScaffold>
   @override
   void didUpdateWidget(DevToolsScaffold oldWidget) {
     super.didUpdateWidget(oldWidget);
-    print('widget update!');
+    // print('widget update!');
 
     if (widget.tab != null &&
         widget.tabs[_tabController.index].name != widget.tab) {
-      print(
-          'tab has changed from ${widget.tabs[_tabController.index].name} to ${widget.tab}!');
+      // print(
+      //     'tab has changed from ${widget.tabs[_tabController.index].name} to ${widget.tab}!');
       // If the page changed (eg. the route was modified by pressing back in the
       // browser), animate to the new one.
       final newIndex = widget.tabs.indexWhere((t) => t.name == widget.tab);
@@ -58,7 +58,7 @@ class DevToolsScaffoldState extends State<DevToolsScaffold>
         _tabController.animateTo(newIndex);
       }
     } else {
-      print('tab did not change!');
+      // print('tab did not change!');
     }
   }
 
@@ -80,7 +80,7 @@ class DevToolsScaffoldState extends State<DevToolsScaffold>
 
       final routerDelegate =
           Router.of(context).routerDelegate as DevToolsRouterDelegate;
-      print('tab controller change!');
+      // print('tab controller change!');
       routerDelegate.pushScreenIfNotCurrent(screen.name);
     });
   }

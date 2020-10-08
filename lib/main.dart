@@ -37,9 +37,7 @@ class DevToolsAppState extends State<DevToolsApp> {
   Map<String, UrlParametersBuilder> get routes {
     return _routes ??= {
       homeRoute: (context, page, params) {
-        print(params);
         if (params['uri']?.isNotEmpty ?? false) {
-          print('returning main view!');
           return DevToolsScaffold(
             key: Key('home'),
             tab: page,
@@ -52,7 +50,6 @@ class DevToolsAppState extends State<DevToolsApp> {
             ],
           );
         } else {
-          print('returning connect screen!');
           return DevToolsScaffold.withChild(
             key: Key('connect'),
             child: Column(
@@ -61,9 +58,7 @@ class DevToolsAppState extends State<DevToolsApp> {
                 RaisedButton(
                   child: Text('Connect Me!'),
                   onPressed: () {
-                    final routerDelegate = Router.of(context).routerDelegate
-                        as DevToolsRouterDelegate;
-                    print('connect button pressed!');
+                    final routerDelegate = DevToolsRouterDelegate.of(context);
                     routerDelegate.pushScreenIfNotCurrent(
                         'tab1', {'uri': 'my vm service uri'});
                   },
@@ -73,10 +68,19 @@ class DevToolsAppState extends State<DevToolsApp> {
           );
         }
       },
-      otherRoute: (_, __, ___) {
+      otherRoute: (context, _, __) {
         return DevToolsScaffold.withChild(
           key: Key('other'),
-          child: Text('Other screen!'),
+          child: Column(
+            children: [
+              Text('Other screen!'),
+              RaisedButton(
+                child: Text('Pop this page!'),
+                onPressed: DevToolsRouterDelegate.of(context).popPage,
+              ),
+              ShowStack(DevToolsRouterDelegate.of(context)),
+            ],
+          ),
         );
       },
     };
@@ -91,8 +95,6 @@ class DevToolsAppState extends State<DevToolsApp> {
   }
 
   Page _getPage(BuildContext context, String page, Map<String, String> args) {
-    print('Generating route for $page / $args');
-
     final route = routes.containsKey('/$page') ? '/$page' : homeRoute;
 
     return MaterialPage(
@@ -116,8 +118,7 @@ class TabBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final routerDelegate =
-        Router.of(context).routerDelegate as DevToolsRouterDelegate;
+    final routerDelegate = DevToolsRouterDelegate.of(context);
     final isLightTheme =
         routerDelegate.currentConfiguration.args['theme'] != 'dark';
     return Container(
@@ -134,8 +135,30 @@ class TabBody extends StatelessWidget {
                   {'theme': isLightTheme ? 'dark' : 'light'});
             },
           ),
+          RaisedButton(
+            child: Text('Open Other!'),
+            onPressed: () {
+              routerDelegate.pushScreenIfNotCurrent('other');
+            },
+          ),
+          ShowStack(routerDelegate),
         ],
       ),
+    );
+  }
+}
+
+@immutable
+class ShowStack extends StatelessWidget {
+  final DevToolsRouterDelegate routerDelegate;
+  ShowStack(this.routerDelegate);
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text('CURRENT ROUTE STACK:'),
+        ...routerDelegate.routes.map((r) => Text(r.screen)),
+      ],
     );
   }
 }
