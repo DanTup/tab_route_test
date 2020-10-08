@@ -74,12 +74,7 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
 
     return Navigator(
       key: navigatorKey,
-      pages: [
-        // Dummy page to ensure there's always > 1
-        MaterialPage(child: Text('test root page...')),
-        getPage(context, screen, args),
-      ],
-      // why isn't this called?
+      pages: [getPage(context, screen, args)],
       onPopPage: (_, __) => popPage(),
     );
   }
@@ -93,6 +88,16 @@ class DevToolsRouterDelegate extends RouterDelegate<DevToolsRouteConfiguration>
     routes.removeLast();
     notifyListeners();
     return true;
+  }
+
+  @override
+  Future<bool> popRoute() {
+    // First try to handle popping a page ourselves.
+    if (popPage()) {
+      return SynchronousFuture<bool>(true);
+    }
+    // Otherwise delegate to PopNavigatorRouterDelegateMixin.
+    return super.popRoute();
   }
 
   void pushScreenIfNotCurrent(String screen, [Map<String, String> updateArgs]) {
